@@ -1,0 +1,10 @@
+{
+  "Cargo.toml": {
+    "build": "cargo build",
+    "run": "cargo run"
+  },
+  "package.json": {
+    "build": "npm run build",
+    "run": "npm run dev"
+  }
+}
