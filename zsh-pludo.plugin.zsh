@@ -36,19 +36,15 @@ __get_project_type() {
 }
 
 __set_orig_cd() {
-  if [[ "$ORIG_CD_SET" != "true" ]]; then
-    local orig_type=`whence -w cd | rev | cut -f1 -d' ' | rev`
+  local orig_type=`whence -w cd | rev | cut -f1 -d' ' | rev`
 
-    if [[ "$orig_type" == "builtin" ]]; then
-      $ORIG_CD() { builtin cd "$@"; }
-    else 
-      eval "$(
-        echo "$ORIG_CD() {";
-        declare -f cd | tail -n +2
-      )"
-    fi
-
-    export ORIG_CD_SET="true"
+  if [[ "$orig_type" == "builtin" ]]; then
+    $ORIG_CD() { builtin cd "${@}"; }
+  else 
+    eval "$(
+      echo "$ORIG_CD() {";
+      declare -f cd | tail -n +2
+    )"
   fi
 }
 
@@ -66,7 +62,6 @@ load() {
 }
 
 unload() {
-
   local type=$(__get_project_type)
   if [[ "$?" != 0 ]]; then
     return 1
@@ -75,6 +70,14 @@ unload() {
   local project_config=$(jq '."'$type'"' <"$CONFIG")
 
   for cmd in $(jq 'keys[]' -r <<<"$project_config"); do
-    unalias "$cmd"
+    unalias "$cmd" &> /dev/null
   done
+}
+
+__set_orig_cd
+
+cd () {
+  unload
+  __orig_cd "${@}"
+  load
 }
