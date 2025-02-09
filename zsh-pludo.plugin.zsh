@@ -1,5 +1,6 @@
 BASE_DIR=$(dirname $0)
 CONFIG="$BASE_DIR/config.json"
+ORIG_CD=__orig_cd
 
 alias c.="code ."
 alias c="code -g"
@@ -31,6 +32,23 @@ __get_project_type() {
   else
     echo Multiple projects found
     return 2
+  fi
+}
+
+__set_orig_cd() {
+  if [[ "$ORIG_CD_SET" != "true" ]]; then
+    local orig_type=`whence -w cd | rev | cut -f1 -d' ' | rev`
+
+    if [[ "$orig_type" == "builtin" ]]; then
+      $ORIG_CD() { builtin cd "$@"; }
+    else 
+      eval "$(
+        echo "$ORIG_CD() {";
+        declare -f cd | tail -n +2
+      )"
+    fi
+
+    export ORIG_CD_SET="true"
   fi
 }
 
