@@ -23,15 +23,8 @@ __get_project_type() {
     fi
   done
 
-  if [[ $found = 0 ]]; then
-    echo No project found
-    return 1
-  elif [[ $found = 1 ]]; then
+  if [[ $found = 1 ]]; then
     echo $res
-    return 0
-  else
-    echo Multiple projects found
-    return 2
   fi
 }
 
@@ -50,7 +43,8 @@ __set_orig_cd() {
 
 load() {
   local type=$(__get_project_type)
-  if [[ "$?" != 0 ]]; then
+
+  if [[ $type == "" ]]; then
     return 1
   fi
 
@@ -63,7 +57,8 @@ load() {
 
 unload() {
   local type=$(__get_project_type)
-  if [[ "$?" != 0 ]]; then
+
+  if [[ $type == "" ]]; then
     return 1
   fi
 
