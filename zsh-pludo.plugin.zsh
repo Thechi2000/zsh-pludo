@@ -64,3 +64,17 @@ load() {
     alias "$cmd=$(jq --raw-output '."'$cmd'"' <<<"$project_config")"
   done
 }
+
+unload() {
+
+  local type=$(__get_project_type)
+  if [[ "$?" != 0 ]]; then
+    return 1
+  fi
+
+  local project_config=$(jq '."'$type'"' <"$CONFIG")
+
+  for cmd in $(jq 'keys[]' -r <<<"$project_config"); do
+    unalias "$cmd"
+  done
+}
