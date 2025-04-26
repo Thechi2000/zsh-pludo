@@ -4,6 +4,7 @@ ORIG_CD=__orig_cd
 
 CONFIG_FILES=__files__
 CONFIG_NAME=__name__
+LOCAL_CONFIG=.pludo
 
 alias c.="code ."
 alias c="code -g"
@@ -39,6 +40,15 @@ __pludo_get_config_for_type() {
   jq '."'$1'"' <"$CONFIG"
 }
 
+__pludo_get_directory_config() {
+  if [ -f $LOCAL_CONFIG ]; then
+    cat $LOCAL_CONFIG
+    return
+  fi
+
+  __pludo_get_config_for_type $(__pludo_get_directory_type)
+}
+
 __pludo_iter_cmds() {
   for cmd in $(jq 'keys[]' -r <<<"$1"); do
     if [[ ! $cmd == __* ]]; then
@@ -67,9 +77,7 @@ __pludo_load() {
     return 1
   fi
 
-  local project_config=$(__pludo_get_config_for_type $type)
-
-  export PLUDO_PROJECT_TYPE="$type"
+  local project_config=$(__pludo_get_directory_config)
 
   __pludo_iter_cmds $project_config | while read -r name cmd; do alias "$name=$cmd"; done
 }
@@ -81,30 +89,30 @@ __pludo_unload() {
     return 1
   fi
 
-  unset PLUDO_PROJECT_TYPE
-
-  local project_config=$(__pludo_get_config_for_type $type)
+  local project_config=$(__pludo_get_directory_config)
 
   __pludo_iter_cmds $project_config | while read -r name _; do unalias "$name" &> /dev/null; done
 }
 
 __pludo_status() {
-  if [ "$PLUDO_PROJECT_TYPE" != "" ]; then
+  local type=$(__pludo_get_directory_type)
 
-    local project_config=$(__pludo_get_config_for_type $PLUDO_PROJECT_TYPE)
-    local project_name="$(jq -r ".$CONFIG_NAME" <<<"$project_config")"
-    if [[ "$project_name" == "null" ]]; then
-      export project_name="custom"
-    fi
-
-    echo "Pludo status: active"
-    echo "- Project type: $project_name"
-    echo "- Loaded aliases:"
-
-    __pludo_iter_cmds $project_config | while read -r name cmd; do echo "  * $name -> $cmd"; done
-  else
+  if [[ $type == "" ]]; then
     echo "Pludo status: inactive"
+    return
   fi
+
+  local project_config=$(__pludo_get_directory_config)
+  local project_name="$(jq -r ".$CONFIG_NAME" <<<"$project_config")"
+  if [[ "$project_name" == "null" ]]; then
+    export project_name="custom"
+  fi
+
+  echo "Pludo status: active"
+  echo "- Project type: $project_name $(if [ -f $LOCAL_CONFIG ]; then echo '(local)'; fi)"
+  echo "- Loaded aliases:"
+
+  __pludo_iter_cmds $project_config | while read -r name cmd; do echo "  * $name -> $cmd"; done
 }
 
 pludo() {
@@ -129,6 +137,6 @@ __pludo_load
 
 cd () {
   __pludo_unload
-  __orig_cd "${@}"
+  $ORIG_CD "${@}"
   __pludo_load
 }
