@@ -1,9 +1,11 @@
 {
   "Cargo.toml": {
+    "__name": "Rust",
     "build": "cargo build",
     "run": "cargo run"
   },
   "package.json": {
+    "__name": "NPM",
     "build": "npm run build",
     "run": "npm run dev"
   }
