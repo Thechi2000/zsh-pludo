@@ -123,7 +123,14 @@ __pludo_load() {
   local project_config=$(__pludo_get_directory_config)
 
   for name in $(__pludo_iter_cmds "$project_config"); do
-    alias "$name=$(__pludo_cmd $project_config $name)"
+    local cmd=$(__pludo_cmd $project_config $name)
+    local dir=$(__pludo_dir $project_config $name)
+
+    if [ "$dir" != "/" ]; then
+      cmd="($ORIG_CD $PWD/$dir && ($cmd))"
+    fi
+
+    alias "$name=$cmd"
   done
 }
 
