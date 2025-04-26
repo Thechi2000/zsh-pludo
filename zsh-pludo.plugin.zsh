@@ -16,6 +16,32 @@ alias activate=". .venv/bin/activate"
 
 alias sido=sudo
 
+Reset='\e[0m'
+Bright='\e[1m'
+Dim='\e[2m'
+Underscore='\e[4m'
+Blink='\e[5m'
+Reverse='\e[7m'
+Hidden='\e[8m'
+
+FgBlack='\e[30m'
+FgRed='\e[31m'
+FgGreen='\e[32m'
+FgYellow='\e[33m'
+FgBlue='\e[34m'
+FgMagenta='\e[35m'
+FgCyan='\e[36m'
+FgWhite='\e[37m'
+
+BgBlack='\e[40m'
+BgRed='\e[41m'
+BgGreen='\e[42m'
+BgYellow='\e[43m'
+BgBlue='\e[44m'
+BgMagenta='\e[45m'
+BgCyan='\e[46m'
+BgWhite='\e[47m'
+
 __pludo_get_directory_type() {
   local res=""
   local found=0
@@ -98,7 +124,7 @@ __pludo_status() {
   local type=$(__pludo_get_directory_type)
 
   if [[ $type == "" ]]; then
-    echo "Pludo status: inactive"
+    echo "${Bright}Pludo status: ${FgRed}inactive${Reset}"
     return
   fi
 
@@ -108,11 +134,11 @@ __pludo_status() {
     export project_name="custom"
   fi
 
-  echo "Pludo status: active"
-  echo "- Project type: $project_name $(if [ -f $LOCAL_CONFIG ]; then echo '(local)'; fi)"
+  echo "${Bright}Pludo status: ${FgGreen}active${Reset}"
+  echo "- Project type: ${Bright}$project_name $(if [ -f $LOCAL_CONFIG ]; then echo '(local)'; fi)${Reset}"
   echo "- Loaded aliases:"
 
-  __pludo_iter_cmds $project_config | while read -r name cmd; do echo "  * $name -> $cmd"; done
+  __pludo_iter_cmds $project_config | while read -r name cmd; do echo "  * ${Bright}${FgBlue}$name${Reset} -> $cmd"; done
 }
 
 pludo() {
