@@ -1,11 +1,17 @@
 {
-  "Cargo.toml": {
-    "__name": "Rust",
+  "rust": {
+    "__files__": [
+      "Cargo.toml"
+    ],
+    "__name__": "Rust",
     "build": "cargo build",
     "run": "cargo run"
   },
   "package.json": {
-    "__name": "NPM",
+    "__name__": "NPM",
+    "__files__": [
+      "package.json"
+    ],
     "build": "npm run build",
     "run": "npm run dev"
   }
