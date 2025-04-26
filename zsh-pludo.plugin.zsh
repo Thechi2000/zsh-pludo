@@ -15,12 +15,12 @@ alias activate=". .venv/bin/activate"
 
 alias sido=sudo
 
-__get_project_type() {
+__pludo_get_directory_type() {
   local res=""
   local found=0
 
   for type in $(jq 'keys[]' -r <"$CONFIG"); do
-    local project_config=$(__get_config $type)
+    local project_config=$(__pludo_get_config_for_type $type)
 
     for file in $(jq ".${CONFIG_FILES}[]" -r <<< "$project_config"); do
       if [[ -f "./$file" ]]; then
@@ -35,11 +35,11 @@ __get_project_type() {
   fi
 }
 
-__get_config() {
+__pludo_get_config_for_type() {
   jq '."'$1'"' <"$CONFIG"
 }
 
-__get_cmds() {
+__pludo_iter_cmds() {
   for cmd in $(jq 'keys[]' -r <<<"$1"); do
     if [[ ! $cmd == __* ]]; then
       echo $cmd "$(jq --raw-output '."'$cmd'"' <<<"$1")"
@@ -47,7 +47,7 @@ __get_cmds() {
   done
 }
 
-__set_orig_cd() {
+__pludo_set_orig_cd() {
   local orig_type=`whence -w cd | rev | cut -f1 -d' ' | rev`
 
   if [[ "$orig_type" == "builtin" ]]; then
@@ -61,21 +61,21 @@ __set_orig_cd() {
 }
 
 __pludo_load() {
-  local type=$(__get_project_type)
+  local type=$(__pludo_get_directory_type)
 
   if [[ $type == "" ]]; then
     return 1
   fi
 
-  local project_config=$(__get_config $type)
+  local project_config=$(__pludo_get_config_for_type $type)
 
   export PLUDO_PROJECT_TYPE="$type"
 
-  __get_cmds $project_config | while read -r name cmd; do alias "$name=$cmd"; done
+  __pludo_iter_cmds $project_config | while read -r name cmd; do alias "$name=$cmd"; done
 }
 
 __pludo_unload() {
-  local type=$(__get_project_type)
+  local type=$(__pludo_get_directory_type)
 
   if [[ $type == "" ]]; then
     return 1
@@ -83,15 +83,15 @@ __pludo_unload() {
 
   unset PLUDO_PROJECT_TYPE
 
-  local project_config=$(__get_config $type)
+  local project_config=$(__pludo_get_config_for_type $type)
 
-  __get_cmds $project_config | while read -r name _; do unalias "$name" &> /dev/null; done
+  __pludo_iter_cmds $project_config | while read -r name _; do unalias "$name" &> /dev/null; done
 }
 
 __pludo_status() {
   if [ "$PLUDO_PROJECT_TYPE" != "" ]; then
 
-    local project_config=$(__get_config $PLUDO_PROJECT_TYPE)
+    local project_config=$(__pludo_get_config_for_type $PLUDO_PROJECT_TYPE)
     local project_name="$(jq -r ".$CONFIG_NAME" <<<"$project_config")"
     if [[ "$project_name" == "null" ]]; then
       export project_name="custom"
@@ -101,7 +101,7 @@ __pludo_status() {
     echo "- Project type: $project_name"
     echo "- Loaded aliases:"
 
-    __get_cmds $project_config | while read -r name cmd; do echo "  * $name -> $cmd"; done
+    __pludo_iter_cmds $project_config | while read -r name cmd; do echo "  * $name -> $cmd"; done
   else
     echo "Pludo status: inactive"
   fi
@@ -124,7 +124,7 @@ pludo() {
     fi
 }
 
-__set_orig_cd
+__pludo_set_orig_cd
 __pludo_load
 
 cd () {
