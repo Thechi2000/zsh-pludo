@@ -126,11 +126,12 @@ __pludo_load() {
     local cmd=$(__pludo_cmd $project_config $name)
     local dir=$(__pludo_dir $project_config $name)
 
-    if [ "$dir" != "/" ]; then
-      cmd="($ORIG_CD $PWD/$dir && ($cmd))"
-    fi
-
-    alias "$name=$cmd"
+    eval "$name () (
+      $(if [ "$dir" != "/" ]; then
+        echo "$ORIG_CD $PWD/$dir || return 1"
+      fi)
+      $cmd \${@}
+    )"
   done
 }
 
@@ -144,7 +145,7 @@ __pludo_unload() {
   local project_config=$(__pludo_get_directory_config)
 
   for name in $(__pludo_iter_cmds "$project_config"); do
-    unalias "$name"
+    unset -f "$name"
   done
 }
 
