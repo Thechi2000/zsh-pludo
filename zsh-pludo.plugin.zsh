@@ -76,11 +76,28 @@ __pludo_get_directory_config() {
 }
 
 __pludo_iter_cmds() {
-  for cmd in $(jq 'keys[]' -r <<<"$1"); do
-    if [[ ! $cmd == __* ]]; then
-      echo $cmd "$(jq --raw-output '."'$cmd'"' <<<"$1")"
+  for name in $(jq 'keys[]' -r <<<"$1"); do
+    if [[ ! $name == __* ]]; then
+      echo $name
     fi
   done
+}
+
+__pludo_cmd() {
+  local value="$(jq '."'$2'"' <<<"$1")"
+  if [ "$(jq -r '. | type' <<< "$value")" = "string" ]; then
+    echo "$(jq -r . <<< "$value")"
+  else
+    echo "$(jq -r .cmd <<< "$value")"
+  fi
+}
+__pludo_dir() {
+  local value="$(jq '."'$2'"' <<<"$1")"
+  if [ "$(jq -r '. | type' <<< "$value")" = "string" ]; then
+    echo /
+  else
+    echo "$(jq -r .dir <<< "$value")"
+  fi
 }
 
 __pludo_set_orig_cd() {
@@ -105,7 +122,9 @@ __pludo_load() {
 
   local project_config=$(__pludo_get_directory_config)
 
-  __pludo_iter_cmds $project_config | while read -r name cmd; do alias "$name=$cmd"; done
+  for name in $(__pludo_iter_cmds "$project_config"); do
+    alias "$name=$(__pludo_cmd $project_config $name)"
+  done
 }
 
 __pludo_unload() {
@@ -117,7 +136,9 @@ __pludo_unload() {
 
   local project_config=$(__pludo_get_directory_config)
 
-  __pludo_iter_cmds $project_config | while read -r name _; do unalias "$name" &> /dev/null; done
+  for name in $(__pludo_iter_cmds "$project_config"); do
+    unalias "$name"
+  done
 }
 
 __pludo_status() {
@@ -138,7 +159,15 @@ __pludo_status() {
   echo "- Project type: ${Bright}$project_name $(if [ -f $LOCAL_CONFIG ]; then echo '(local)'; fi)${Reset}"
   echo "- Loaded aliases:"
 
-  __pludo_iter_cmds $project_config | while read -r name cmd; do echo "  * ${Bright}${FgBlue}$name${Reset} -> $cmd"; done
+  for name in $(__pludo_iter_cmds "$project_config"); do
+    local cmd="$(__pludo_cmd $project_config $name)"
+    echo "  * ${Bright}${FgBlue}$name${Reset} -> $cmd"
+
+    local dir="$(__pludo_dir $project_config $name)"
+    if [ "$dir" != "/" ]; then
+      echo "    from directory: $dir"
+    fi
+  done
 }
 
 pludo() {
