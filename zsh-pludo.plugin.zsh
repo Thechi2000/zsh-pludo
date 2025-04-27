@@ -148,22 +148,17 @@ __pludo_unload() {
 __pludo_status() {
   local project_config=$(__pludo_get_directory_config)
   if [[ "$project_config" == "" ]]; then
-    return 1
-  fi
-
-  if [[ $type == "" ]]; then
     echo "${Bright}Pludo status: ${FgRed}inactive${Reset}"
     return
   fi
 
-  local project_config=$(__pludo_get_directory_config)
   local project_name="$(jq -r ".$CONFIG_NAME" <<<"$project_config")"
   if [[ "$project_name" == "null" ]]; then
     export project_name="custom"
   fi
 
   echo "${Bright}Pludo status: ${FgGreen}active${Reset}"
-  echo "- Project type: ${Bright}$project_name $(if [ -f $LOCAL_CONFIG ]; then echo '(local)'; fi)${Reset}"
+  echo "- Project type: ${Bright}$project_name $(if [ -f "$LOCAL_CONFIG" ]; then echo '(local)'; fi)${Reset}"
   echo "- Loaded aliases:"
 
   for name in $(__pludo_iter_cmds "$project_config"); do
