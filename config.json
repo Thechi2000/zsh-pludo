@@ -1,18 +1,28 @@
 {
   "rust": {
-    "__files__": [
-      "Cargo.toml"
-    ],
+    "__files__": ["Cargo.toml"],
     "__name__": "Rust",
     "build": "cargo build",
     "run": "cargo run"
   },
-  "package.json": {
+  "npm": {
     "__name__": "NPM",
-    "__files__": [
-      "package.json"
-    ],
+    "__files__": ["package.json"],
     "build": "npm run build",
     "run": "npm run dev"
+  },
+  "flutter": {
+    "__name__": "Flutter",
+    "__files__": ["pubspec.yaml"],
+    "run": "flutter run -d emulator-5554 --no-enable-impeller",
+    "build": "flutter build apk --debug",
+    "check": "dart analyze ."
+  },
+  "coq": {
+    "__name__": "Coq",
+    "__files__": ["_CoqProject"],
+    "run": "make",
+    "build": "coq_makefile -f _CoqProject **/*.v -o Makefile",
+    "clean": "make clean"
   }
 }
