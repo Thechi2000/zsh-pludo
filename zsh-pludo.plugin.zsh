@@ -98,7 +98,15 @@ __pludo_dir() {
   if [ "$(jq -r '. | type' <<< "$value")" = "string" ]; then
     echo /
   else
-    echo "$(jq -r .dir <<< "$value")"
+    jq -r '.dir // "/"' <<< "$value"
+  fi
+}
+__pludo_as_alias() {
+  local value="$(jq '."'$2'"' <<<"$1")"
+  if [ "$(jq -r '. | type' <<< "$value")" = "string" ]; then
+    echo false
+  else
+    jq -r '.as_alias // false' <<< "$value"
   fi
 }
 
@@ -124,13 +132,18 @@ __pludo_load() {
   for name in $(__pludo_iter_cmds "$project_config"); do
     local cmd=$(__pludo_cmd $project_config $name)
     local dir=$(__pludo_dir $project_config $name)
+    local as_alias=$(__pludo_as_alias $project_config $name)
 
-    eval "$name () (
-      $(if [ "$dir" != "/" ]; then
-        echo "$ORIG_CD $PWD/$dir || return 1"
-      fi)
-      $cmd \${@}
-    )"
+    if [ "$as_alias" = "true" ]; then
+      alias "$name=$cmd"
+    else
+      eval "$name () (
+        $(if [ "$dir" != "/" ]; then
+          echo "$ORIG_CD $PWD/$dir || return 1"
+        fi)
+        $cmd \${@}
+      )"
+    fi
   done
 }
 
@@ -141,7 +154,12 @@ __pludo_unload() {
   fi
 
   for name in $(__pludo_iter_cmds "$project_config"); do
-    unset -f "$name"
+    local as_alias=$(__pludo_as_alias $project_config $name)
+    if [ "$as_alias" = "true" ]; then
+      unalias "$name"
+    else
+      unset -f "$name"
+    fi
   done
 }
 
@@ -159,7 +177,7 @@ __pludo_status() {
 
   echo "${Bright}Pludo status: ${FgGreen}active${Reset}"
   echo "- Project type: ${Bright}$project_name $(if [ -f "$LOCAL_CONFIG" ]; then echo '(local)'; fi)${Reset}"
-  echo "- Loaded aliases:"
+  echo "- Loaded shortcuts:"
 
   for name in $(__pludo_iter_cmds "$project_config"); do
     local cmd="$(__pludo_cmd $project_config $name)"
@@ -167,8 +185,14 @@ __pludo_status() {
 
     local dir="$(__pludo_dir $project_config $name)"
     if [ "$dir" != "/" ]; then
-      echo "    from directory: $dir"
+      echo "      from directory: $dir"
     fi
+
+    local as_alias=$(__pludo_as_alias $project_config $name)
+    if [ "$as_alias" = "true" ]; then
+      echo "      as alias"
+    fi
+
   done
 }
 
