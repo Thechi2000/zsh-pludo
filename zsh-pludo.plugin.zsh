@@ -117,7 +117,7 @@ __pludo_set_orig_cd() {
 
 __pludo_load() {
   local project_config=$(__pludo_get_directory_config)
-  if [[ "$project_config" == "" ]]; then
+  if [[ "$project_config" == "null" ]]; then
     return 1
   fi
 
@@ -136,7 +136,7 @@ __pludo_load() {
 
 __pludo_unload() {
   local project_config=$(__pludo_get_directory_config)
-  if [[ "$project_config" == "" ]]; then
+  if [[ "$project_config" == "null" ]]; then
     return 1
   fi
 
@@ -147,7 +147,7 @@ __pludo_unload() {
 
 __pludo_status() {
   local project_config=$(__pludo_get_directory_config)
-  if [[ "$project_config" == "" ]]; then
+  if [[ "$project_config" == "null" ]]; then
     echo "${Bright}Pludo status: ${FgRed}inactive${Reset}"
     return
   fi
