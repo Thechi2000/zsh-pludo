@@ -192,7 +192,9 @@ __pludo_link() {
     return 1
   fi
 
+  echo "Linking and loading ${Bright}$config${Reset}"
   ln -sf "$config_path" "$LOCAL_CONFIG"
+  __pludo_load
 }
 
 __pludo_create() {
