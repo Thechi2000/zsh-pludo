@@ -177,9 +177,7 @@ __pludo_setup_config() (
     mkdir -p "$PLUDO_CONFIG_DIR"
     cd "$PLUDO_CONFIG_DIR"
     
-    git init .
-    git remote add origin "$PLUDO_CONFIG_REMOTE"
-    git pull --set-upstream origin main
+    git clone "$PLUDO_CONFIG_REMOTE" .
   fi
 )
 
