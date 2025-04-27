@@ -178,10 +178,8 @@ __pludo_setup_config() (
     cd "$PLUDO_CONFIG_DIR"
     
     git init .
-    git commit --allow-empty -m "initial commit"
     git remote add origin "$PLUDO_CONFIG_REMOTE"
-
-    git push --set-upstream origin main
+    git pull --set-upstream origin main
   fi
 )
 
